@@ -1,20 +1,8 @@
-$ gradle test
+#!/usr/bin/env sh
 
-> Task :compileJava
-> Task :processResources
-> Task :classes
-> Task :compileTestJava
-> Task :test
-
-OrderPayloadTest > trimsAndRetainsValidPayload() PASSED
-OrderPayloadTest > acceptsBoundaryValidValues() PASSED
-OrderPayloadTest > rejectsInvalidQuantity() PASSED
-OrderPayloadTest > rejectsBlankItem() PASSED
-OrderPayloadTest > rejectsBlankOrderId() PASSED
-OrderPayloadTest > rejectsNullItem() PASSED
-OrderPayloadTest > rejectsNullOrderId() PASSED
-OrderPayloadTest > allowsLongButValidValues() PASSED
-OrderPayloadTest > rejectsOversizedItem() PASSED
-OrderPayloadTest > rejectsOversizedOrderId() PASSED
-
-BUILD SUCCESSFUL in 4s
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle "$@"
+else
+  echo "Gradle is not installed or not available in PATH. Install Gradle 8.10+ and retry." >&2
+  exit 1
+fi

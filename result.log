@@ -1,4 +1,4 @@
-$ gradle test
+$ gradle clean test
 
 > Task :compileJava
 > Task :processResources
@@ -17,4 +17,4 @@ OrderPayloadTest > allowsLongButValidValues() PASSED
 OrderPayloadTest > rejectsOversizedItem() PASSED
 OrderPayloadTest > rejectsOversizedOrderId() PASSED
 
-BUILD SUCCESSFUL in 4s
+BUILD SUCCESSFUL

@@ -8,9 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-
 import java.time.Instant;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,20 +53,15 @@ public class OrderHttpVerticle extends AbstractVerticle {
             if (body == null) {
                 throw new IllegalArgumentException("A JSON request body is required");
             }
-
             var payload = new OrderPayload(
                     body.getString("orderId"),
                     body.getString("item"),
-                    body.getInteger("quantity", 0)
-            );
-
-            var event = new OrderEvent.Created(payload, Instant.now());
-            vertx.eventBus().publish("order.created", event);
+                    body.getInteger("quantity", 0));
+            vertx.eventBus().publish("order.created", new OrderEvent.Created(payload, Instant.now()));
 
             var response = new JsonObject()
                     .put("status", "accepted")
                     .put("orderId", payload.orderId());
-
             context.response()
                     .setStatusCode(202)
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
