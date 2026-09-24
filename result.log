@@ -1,23 +1,81 @@
-$ ./gradlew test
+# reactive-order-engine
 
-> Task :compileJava
-> Task :processResources
-> Task :classes
-> Task :compileTestJava
-> Task :processTestResources NO-SOURCE
-> Task :testClasses
-> Task :test
+A security-hardened asynchronous order processing engine built with Java 21, Spring Boot 3.4.3, and Vert.x 4.5.13.
 
-OrderPayloadTest > trimsAndRetainsValidPayload() PASSED
-OrderPayloadTest > acceptsBoundaryValidValues() PASSED
-OrderPayloadTest > rejectsInvalidQuantity() PASSED
-OrderPayloadTest > rejectsBlankItem() PASSED
-OrderPayloadTest > rejectsBlankOrderId() PASSED
-OrderPayloadTest > rejectsNullItem() PASSED
-OrderPayloadTest > rejectsNullOrderId() PASSED
-OrderPayloadTest > allowsLongButValidValues() PASSED
-OrderPayloadTest > rejectsOversizedItem() PASSED
-OrderPayloadTest > rejectsOversizedOrderId() PASSED
+This project is a reference implementation designed to demonstrate secure request handling, event-driven processing, Java 21 virtual-thread execution, and a repository workflow built around `dev` integration.
 
-BUILD SUCCESSFUL in 4s
-5 actionable tasks: 5 executed
+> Important: this project is a hardened reference implementation for architecture and engineering demonstration. It is not a formal VAPT certification or a production deployment blueprint by itself. Real-world deployments still require identity validation, durable messaging, secrets management, TLS termination, audit controls, and external security testing.
+
+## Stack
+
+- Java 21
+- Spring Boot 3.4.3
+- Vert.x 4.5.13
+- Gradle Kotlin DSL
+- JUnit 5
+
+## Branch strategy
+
+This repository uses a dev-first workflow:
+
+- `main` is reserved for release-ready states.
+- `dev` is the integration branch for active work.
+- Each feature or bug fix is developed on a dedicated branch such as `feature/http-api`, `feature/security-hardening`, or `fix/production-readiness`.
+- Feature branches merge into `dev` only.
+- `main` is updated after validation and release readiness are confirmed.
+
+## Run
+
+If Gradle is installed locally:
+
+```bash
+gradle bootRun
+```
+
+Minimal wrapper-style launcher for environments without a full wrapper:
+
+```bash
+./gradlew bootRun
+```
+
+## Submit a sample order
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -d '{"orderId":"order-1001","item":"mechanical keyboard","quantity":2}'
+```
+
+Expected response:
+
+```json
+{"status":"accepted","orderId":"order-1001"}
+```
+
+## Security design
+
+- Request bodies limited to 10 KB
+- `orderId`, `item`, and `quantity` are validated at the HTTP boundary
+- Security headers added to every response
+- Event-driven consumer flow decouples synchronous and asynchronous processing
+- Java 21 virtual threads are used for worker execution
+
+## Project structure
+
+```text
+src/main/java/com/example/orderengine/
+├── OrderEngineApplication.java
+├── OrderPayload.java
+├── OrderEvent.java
+├── OrderHttpVerticle.java
+├── InventoryService.java
+├── InventoryVerticle.java
+├── NotificationService.java
+├── NotificationVerticle.java
+├── VertxInitializer.java
+└── src/test/java/com/example/orderengine/OrderPayloadTest.java
+```
+
+## Result log
+
+See [`result.log`](result.log) for the sample test execution summary.
