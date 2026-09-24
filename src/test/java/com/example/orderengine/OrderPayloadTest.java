@@ -1,94 +1,80 @@
 package com.example.orderengine;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.time.Instant;
+import org.junit.jupiter.api.Test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+class OrderPayloadTest {
 
-public class OrderHttpVerticle extends AbstractVerticle {
+    @Test
+    void trimsAndRetainsValidPayload() {
+        var payload = new OrderPayload(" order-1 ", " keyboard ", 2);
 
-    private static final Logger log = LoggerFactory.getLogger(OrderHttpVerticle.class);
-    private static final int PORT = 8080;
-    private static final long MAX_BODY_BYTES = 10 * 1024;
-    private HttpServer server;
-
-    @Override
-    public void start(Promise<Void> startPromise) {
-        var router = Router.router(vertx);
-        router.route().handler(BodyHandler.create().setBodyLimit(MAX_BODY_BYTES));
-        router.route().handler(this::securityHeaders);
-        router.post("/api/v1/orders").handler(this::createOrder);
-        router.get("/health").handler(context -> context.response().end("UP"));
-
-        vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(PORT)
-                .onSuccess(httpServer -> {
-                    server = httpServer;
-                    log.info("Order HTTP API listening on port {}", PORT);
-                    startPromise.complete();
-                })
-                .onFailure(startPromise::fail);
+        assertEquals("order-1", payload.orderId());
+        assertEquals("keyboard", payload.item());
     }
 
-    private void securityHeaders(RoutingContext context) {
-        var headers = context.response().headers();
-        headers.set("X-Content-Type-Options", "nosniff");
-        headers.set("X-Frame-Options", "DENY");
-        headers.set("X-XSS-Protection", "0");
-        headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-        context.next();
+    @Test
+    void acceptsBoundaryValidValues() {
+        var payload = new OrderPayload("order-999", "item", 1000);
+
+        assertEquals("order-999", payload.orderId());
+        assertEquals("item", payload.item());
+        assertEquals(1000, payload.quantity());
     }
 
-    private void createOrder(RoutingContext context) {
-        try {
-            var body = context.body().asJsonObject();
-            if (body == null) {
-                throw new IllegalArgumentException("A JSON request body is required");
-            }
+    @Test
+    void rejectsInvalidQuantity() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("order-1", "keyboard", 0));
 
-            var payload = new OrderPayload(
-                    body.getString("orderId"),
-                    body.getString("item"),
-                    body.getInteger("quantity", 0)
-            );
-
-            var event = new OrderEvent.Created(payload, Instant.now());
-            vertx.eventBus().publish("order.created", event);
-
-            var response = new JsonObject()
-                    .put("status", "accepted")
-                    .put("orderId", payload.orderId());
-
-            context.response()
-                    .setStatusCode(202)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(response.encode());
-        } catch (IllegalArgumentException | ClassCastException exception) {
-            context.response().setStatusCode(400)
-                    .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .end(new JsonObject().put("error", exception.getMessage()).encode());
-        } catch (RuntimeException exception) {
-            log.error("Unexpected order submission failure", exception);
-            context.response().setStatusCode(500).end();
-        }
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("order-1", "keyboard", 1001));
     }
 
-    @Override
-    public void stop(Promise<Void> stopPromise) {
-        if (server == null) {
-            stopPromise.complete();
-        } else {
-            server.close().onComplete(ignored -> stopPromise.complete());
-        }
+    @Test
+    void rejectsBlankItem() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("order-1", "   ", 1));
+    }
+
+    @Test
+    void rejectsBlankOrderId() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("   ", "keyboard", 1));
+    }
+
+    @Test
+    void rejectsNullItem() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("order-1", null, 1));
+    }
+
+    @Test
+    void rejectsNullOrderId() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload(null, "keyboard", 1));
+    }
+
+    @Test
+    void allowsLongButValidValues() {
+        var validItem = "x".repeat(256);
+        assertDoesNotThrow(() -> new OrderPayload("order-1", validItem, 1));
+    }
+
+    @Test
+    void rejectsOversizedItem() {
+        var oversizedItem = "x".repeat(257);
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload("order-1", oversizedItem, 1));
+    }
+
+    @Test
+    void rejectsOversizedOrderId() {
+        var oversizedOrderId = "x".repeat(65);
+        assertThrows(IllegalArgumentException.class,
+                () -> new OrderPayload(oversizedOrderId, "keyboard", 1));
     }
 }

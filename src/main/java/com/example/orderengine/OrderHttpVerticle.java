@@ -8,7 +8,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+
 import java.time.Instant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +29,15 @@ public class OrderHttpVerticle extends AbstractVerticle {
         router.post("/api/v1/orders").handler(this::createOrder);
         router.get("/health").handler(context -> context.response().end("UP"));
 
-        server = vertx.createHttpServer().requestHandler(router).listen(PORT);
-        server.onSuccess(ignored -> {
-            log.info("Order HTTP API listening on port {}", PORT);
-            startPromise.complete();
-        }).onFailure(startPromise::fail);
+        vertx.createHttpServer()
+                .requestHandler(router)
+                .listen(PORT)
+                .onSuccess(httpServer -> {
+                    server = httpServer;
+                    log.info("Order HTTP API listening on port {}", PORT);
+                    startPromise.complete();
+                })
+                .onFailure(startPromise::fail);
     }
 
     private void securityHeaders(RoutingContext context) {
@@ -49,16 +55,20 @@ public class OrderHttpVerticle extends AbstractVerticle {
             if (body == null) {
                 throw new IllegalArgumentException("A JSON request body is required");
             }
+
             var payload = new OrderPayload(
                     body.getString("orderId"),
                     body.getString("item"),
-                    body.getInteger("quantity", 0));
+                    body.getInteger("quantity", 0)
+            );
+
             var event = new OrderEvent.Created(payload, Instant.now());
             vertx.eventBus().publish("order.created", event);
 
             var response = new JsonObject()
                     .put("status", "accepted")
                     .put("orderId", payload.orderId());
+
             context.response()
                     .setStatusCode(202)
                     .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")

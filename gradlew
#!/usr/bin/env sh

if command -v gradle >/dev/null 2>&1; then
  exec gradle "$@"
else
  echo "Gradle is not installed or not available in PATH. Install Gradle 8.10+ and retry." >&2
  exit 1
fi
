@@ -1,0 +1,12 @@
+# reactive-order-engine
+
+This directory is the project reference for the Java 21 order processing engine.
+
+The actual implementation lives in the repository root project and uses:
+
+- Spring Boot 3.4.3
+- Vert.x 4.5.13
+- Java 21
+- Gradle Kotlin DSL
+
+See the root `README.md` for the full project guide and usage instructions.

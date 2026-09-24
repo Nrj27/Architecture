@@ -1,7 +1,9 @@
-#!/usr/bin/env sh
-if command -v gradle >/dev/null 2>&1; then
-  exec gradle "$@"
-else
-  echo "Gradle is not installed or not available in PATH. Install Gradle 8.10+ and retry." >&2
-  exit 1
-fi
+@echo off
+where gradle >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo Gradle is not installed or not available in PATH.
+    echo Install Gradle 8.10+ and retry.
+    exit /b 1
+)
+
+gradle %*
