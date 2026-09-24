@@ -11,7 +11,6 @@ class OrderPayloadTest {
     @Test
     void trimsAndRetainsValidPayload() {
         var payload = new OrderPayload(" order-1 ", " keyboard ", 2);
-
         assertEquals("order-1", payload.orderId());
         assertEquals("keyboard", payload.item());
     }
@@ -19,7 +18,6 @@ class OrderPayloadTest {
     @Test
     void acceptsBoundaryValidValues() {
         var payload = new OrderPayload("order-999", "item", 1000);
-
         assertEquals("order-999", payload.orderId());
         assertEquals("item", payload.item());
         assertEquals(1000, payload.quantity());
@@ -29,7 +27,6 @@ class OrderPayloadTest {
     void rejectsInvalidQuantity() {
         assertThrows(IllegalArgumentException.class,
                 () -> new OrderPayload("order-1", "keyboard", 0));
-
         assertThrows(IllegalArgumentException.class,
                 () -> new OrderPayload("order-1", "keyboard", 1001));
     }
