@@ -1,0 +1,16 @@
+# Generated files and editor settings
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tooling output
+node_modules/
+dist/
+build/
+coverage/
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
