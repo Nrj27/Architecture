@@ -3,9 +3,21 @@
 ![Architecture status](https://img.shields.io/badge/status-reference%20architecture-blue)
 ![Documentation](https://img.shields.io/badge/docs-Markdown%20%7C%20Mermaid-0f766e)
 
-A practical, technology-agnostic reference architecture for a cloud-native application. It demonstrates how clients, an API gateway, authentication, application services, data stores, asynchronous workers, search, and observability can work together.
+A practical, technology-agnostic reference architecture for a cloud-native application. It demonstrates how clients, an API gateway, authentication, application services, data stores, asynchronous processing, and observability can work together.
 
 > This repository is intentionally documentation-first. It is a design reference, not a deployable production stack.
+
+## Development workflow
+
+This repository follows a `dev`-first branching strategy:
+
+- `main` is reserved for release-ready or stable snapshots.
+- `dev` is the integration branch for active work.
+- Each feature or change set is developed on a dedicated branch such as `feature/bootstrap-gradle`, `feature/http-api`, or `feature/security-hardening`.
+- Feature branches merge into `dev` only.
+- `main` is updated only after validation and release readiness are confirmed.
+
+This keeps active work isolated, reviewable, and safe while preserving a clean release branch.
 
 ## Architecture diagram
 
