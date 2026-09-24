@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: reactive-order-engine
+
+logging:
+  level:
+    com.example.orderengine: INFO
