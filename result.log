@@ -1,0 +1,23 @@
+$ ./gradlew test
+
+> Task :compileJava
+> Task :processResources
+> Task :classes
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+> Task :test
+
+OrderPayloadTest > trimsAndRetainsValidPayload() PASSED
+OrderPayloadTest > acceptsBoundaryValidValues() PASSED
+OrderPayloadTest > rejectsInvalidQuantity() PASSED
+OrderPayloadTest > rejectsBlankItem() PASSED
+OrderPayloadTest > rejectsBlankOrderId() PASSED
+OrderPayloadTest > rejectsNullItem() PASSED
+OrderPayloadTest > rejectsNullOrderId() PASSED
+OrderPayloadTest > allowsLongButValidValues() PASSED
+OrderPayloadTest > rejectsOversizedItem() PASSED
+OrderPayloadTest > rejectsOversizedOrderId() PASSED
+
+BUILD SUCCESSFUL in 4s
+5 actionable tasks: 5 executed
