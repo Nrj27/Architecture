@@ -1,80 +1,67 @@
-package com.example.orderengine;
+# Cloud-Native Architecture Overview
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+![Architecture status](https://img.shields.io/badge/status-reference%20architecture-blue)
+![Documentation](https://img.shields.io/badge/docs-Markdown%20%7C%20Mermaid-0f766e)
 
-import org.junit.jupiter.api.Test;
+A technology-agnostic reference architecture for cloud-native applications, including the `reactive-order-engine` Java 21 implementation.
 
-class OrderPayloadTest {
+## Repository workflow
 
-    @Test
-    void trimsAndRetainsValidPayload() {
-        var payload = new OrderPayload(" order-1 ", " keyboard ", 2);
+- `main` contains release-ready snapshots.
+- `dev` is the integration branch.
+- Feature and fix branches merge into `dev`, not `main`.
+- Promote `dev` to `main` only after validation and release review.
 
-        assertEquals("order-1", payload.orderId());
-        assertEquals("keyboard", payload.item());
-    }
+## Architecture diagram
 
-    @Test
-    void acceptsBoundaryValidValues() {
-        var payload = new OrderPayload("order-999", "item", 1000);
+```mermaid
+flowchart LR
+    Client[Web / Mobile / External Clients]
+    Gateway[API Gateway]
+    Auth[Authentication Service]
+    App[Application Service]
+    Domain[Domain Layer]
+    DB[(Primary Database)]
+    Cache[(Redis Cache)]
+    Broker[Message Broker]
+    Worker[Background Workers]
+    Queue[(Retry / Dead-Letter Queue)]
+    Search[(Search Index)]
+    Telemetry[Logs / Metrics / Traces]
+    Dashboard[Observability Dashboard]
 
-        assertEquals("order-999", payload.orderId());
-        assertEquals("item", payload.item());
-        assertEquals(1000, payload.quantity());
-    }
+    Client -->|HTTPS| Gateway
+    Gateway -->|Authenticate and route| Auth
+    Gateway --> App
+    App --> Domain
+    Domain --> DB
+    App --> Cache
+    Domain --> Broker
+    Broker --> Worker
+    Worker --> Queue
+    Worker --> Search
+    App --> Search
+    Gateway -.-> Telemetry
+    App -.-> Telemetry
+    Worker -.-> Telemetry
+    Telemetry --> Dashboard
+```
 
-    @Test
-    void rejectsInvalidQuantity() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("order-1", "keyboard", 0));
+## Included project
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("order-1", "keyboard", 1001));
-    }
+[`reactive-order-engine/README.md`](reactive-order-engine/README.md) documents the Java 21 asynchronous order-processing reference implementation using Spring Boot 3.4.3, Vert.x 4.5.13, Gradle Kotlin DSL, virtual threads, validation, security headers, and a 10 KB body limit.
 
-    @Test
-    void rejectsBlankItem() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("order-1", "   ", 1));
-    }
+## Documentation
 
-    @Test
-    void rejectsBlankOrderId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("   ", "keyboard", 1));
-    }
+- [`docs/architecture-overview.md`](docs/architecture-overview.md) — detailed architecture and trust boundaries.
+- [`docs/flows.md`](docs/flows.md) — request, event, failure, and deployment flows.
+- [`docs/decisions.md`](docs/decisions.md) — architecture decision records.
+- [`docs/commit-sequence.md`](docs/commit-sequence.md) — illustrative 15-minute commit sequence.
 
-    @Test
-    void rejectsNullItem() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("order-1", null, 1));
-    }
+## Security disclaimer
 
-    @Test
-    void rejectsNullOrderId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload(null, "keyboard", 1));
-    }
+The order engine is a hardened reference implementation, not a VAPT certification. Production use requires authentication and authorization, TLS, secrets management, durable messaging, persistence, idempotency, monitoring, and independent SAST, DAST, dependency, and penetration testing.
 
-    @Test
-    void allowsLongButValidValues() {
-        var validItem = "x".repeat(256);
-        assertDoesNotThrow(() -> new OrderPayload("order-1", validItem, 1));
-    }
+## License
 
-    @Test
-    void rejectsOversizedItem() {
-        var oversizedItem = "x".repeat(257);
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload("order-1", oversizedItem, 1));
-    }
-
-    @Test
-    void rejectsOversizedOrderId() {
-        var oversizedOrderId = "x".repeat(65);
-        assertThrows(IllegalArgumentException.class,
-                () -> new OrderPayload(oversizedOrderId, "keyboard", 1));
-    }
-}
+This project is available under the MIT License. See [`LICENSE`](LICENSE).
